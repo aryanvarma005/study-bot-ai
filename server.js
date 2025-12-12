@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 
 // ---------------- SEND TEXT ----------------
 async function sendText(to, body) {
-  const url = https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages;
+  const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
 
   try {
     await axios.post(
@@ -33,7 +33,7 @@ async function sendText(to, body) {
       },
       {
         headers: {
-          Authorization: Bearer ${WHATSAPP_TOKEN},
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
           "Content-Type": "application/json",
         },
       }
@@ -111,7 +111,7 @@ app.post("/webhook", async (req, res) => {
 
     const ai = await askGroq(text);
 
-    await sendText(from, 📌 Short: ${ai.short_answer});
+    await sendText(from, `📌 Short: ${ai.short_answer}`);
     await sendText(from, ai.detailed_answer);
 
     res.sendStatus(200);

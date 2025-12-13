@@ -47,7 +47,7 @@ async function sendText(to, body) {
 async function askGroq(question, lang = "English") {
   try {
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3 -8b-instant",
+      model: "llama-3-8b-instant",
       messages: [
         {
           role: "user",

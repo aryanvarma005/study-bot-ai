@@ -42,7 +42,7 @@ async function sendText(to, body) {
 async function askGemini(question, lang = "English") {
   try {
     const res = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,//
       {
         contents: [
           {
@@ -102,7 +102,7 @@ app.post("/webhook", async (req, res) => {
 
     const ai = await askGemini(text, "English");
 
-    await sendText(from, 📌 ${ai.short});
+    await sendText(from, `📌 ${ai.short}`);
     await sendText(from, ai.detailed);
 
     res.sendStatus(200);

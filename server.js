@@ -2,23 +2,18 @@ require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
-const { nanoid } = require("nanoid");
-const Groq = require("groq-sdk");
 
-// ---------------- ENV ----------------
+const app = express();
+app.use(bodyParser.json());
+
+// ENV
 const PORT = process.env.PORT || 10000;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-const groq = new Groq({ apiKey: GROQ_API_KEY });
-
-// ---------------- EXPRESS ----------------
-const app = express();
-app.use(bodyParser.json());
-
-// ---------------- SEND TEXT ----------------
+// ---------------- SEND WHATSAPP MESSAGE ----------------
 async function sendText(to, body) {
   const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
 
@@ -29,60 +24,57 @@ async function sendText(to, body) {
         messaging_product: "whatsapp",
         to,
         type: "text",
-        text: { body },
+        text: { body }
       },
       {
         headers: {
           Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json",
-        },
+          "Content-Type": "application/json"
+        }
       }
     );
   } catch (err) {
-    console.log("SEND TEXT ERROR:", err.response?.data || err);
+    console.log("SEND TEXT ERROR:", err.response?.data || err.message);
   }
 }
 
-// ---------------- ASK GROQ ----------------
-async function askGroq(question, lang = "English") {
+// ---------------- ASK GEMINI ----------------
+async function askGemini(question, lang = "English") {
   try {
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        {
-          role: "user",
-          content: `
-You are a study AI assistant.
-Reply ONLY in JSON format:
-{
-  "short_answer": "",
-  "detailed_answer": ""
-}
+    const res = await axios.post(
+      https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY},
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: `
+You are an Indian study assistant.
+Answer in ${lang}.
+Give a short answer and then a detailed explanation.
 
 Question: ${question}
-Language: ${lang}
-`,
-        },
-      ],
-      temperature: 0.3,
-    });
+`
+              }
+            ]
+          }
+        ]
+      }
+    );
 
-    let raw = completion.choices[0].message.content.trim();
+    const text =
+      res.data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "No response";
 
-    // Try JSON parse
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return {
-        short_answer: raw.slice(0, 200),
-        detailed_answer: raw,
-      };
-    }
-  } catch (error) {
-    console.log("GROQ ERROR:", error);
     return {
-      short_answer: "AI error",
-      detailed_answer: "Please try again later.",
+      short: text.split("\n")[0],
+      detailed: text
+    };
+  } catch (err) {
+    console.log("GEMINI ERROR:", err.response?.data || err.message);
+    return {
+      short: "AI Error",
+      detailed: "Please try again later."
     };
   }
 }
@@ -107,24 +99,26 @@ app.post("/webhook", async (req, res) => {
     const from = msg.from;
     const text = msg.text?.body || "";
 
-    console.log("USER MESSAGE:", text);
+    console.log("USER:", text);
 
-    const ai = await askGroq(text);
+    const ai = await askGemini(text, "English");
 
-    await sendText(from, `📌 Short: ${ai.short_answer}`);
-    await sendText(from, ai.detailed_answer);
+    await sendText(from, 📌 ${ai.short});
+    await sendText(from, ai.detailed);
 
     res.sendStatus(200);
   } catch (e) {
-    console.log("WEBHOOK ERROR:", e);
+    console.log("WEBHOOK ERROR:", e.message);
     res.sendStatus(200);
   }
 });
 
 // ---------------- HEALTH CHECK ----------------
 app.get("/", (req, res) => {
-  res.send("STUDY BOT AI RUNNING ✔ with GROQ");
+  res.send("STUDY BOT AI RUNNING ✔ with GEMINI");
 });
 
-// ---------------- START ----------------
-app.listen(PORT, () => console.log("🚀 SERVER RUNNING ON PORT", PORT));
+// ---------------- START SERVER ----------------
+app.listen(PORT, () =>
+  console.log("🚀 SERVER RUNNING ON PORT", PORT)
+);

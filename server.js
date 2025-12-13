@@ -42,7 +42,7 @@ async function sendText(to, body) {
 async function askGemini(question, lang = "English") {
   try {
     const res = await axios.post(
-      https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY},
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`
       {
         contents: [
           {
@@ -63,8 +63,7 @@ Question: ${question}
     );
 
     const text =
-      res.data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response";
+      res.data.candidates?.[0]?.content?.parts?.[0]?.text ||"No response";
 
     return {
       short: text.split("\n")[0],
@@ -73,8 +72,8 @@ Question: ${question}
   } catch (err) {
     console.log("GEMINI ERROR:", err.response?.data || err.message);
     return {
-      short: "AI Error",
-      detailed: "Please try again later."
+      short: "SORRY BHAI ERROR AA GYA",
+      detailed: "WAPAS TRY KAR"
     };
   }
 }

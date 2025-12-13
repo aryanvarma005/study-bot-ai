@@ -42,7 +42,7 @@ async function sendText(to, body) {
 async function askGemini(question, lang = "English") {
   try {
     const res = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,//
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,//
       {
         contents: [
           {
